@@ -14,6 +14,14 @@ def check_total(invoice):
 def validate(invoice):
     """Return a list of problems. An empty list means everything is fine."""
     problems = []
+
+    # first make sure the numbers exist, so the checks below never see None
+    for key in ["subtotal", "gst", "total"]:
+        if invoice[key] is None:
+            problems.append(f"missing field: {key}")
+    if problems:
+        return problems
+
     if not check_items(invoice):
         problems.append("items do not add up to subtotal")
     if not check_total(invoice):
@@ -26,8 +34,10 @@ if __name__ == "__main__":
             "subtotal": 200.0, "gst": 36.0, "total": 236.0}
     bad = {"items": [{"name": "Webcam", "qty": 2, "price": 100.0}],
            "subtotal": 200.0, "gst": 36.0, "total": 999.0}
-    print(validate(good))   # expect: []
-    print(validate(bad))    # expect: one problem listed
+    broken = {"items": [], "subtotal": None, "gst": 0.0, "total": None}
+    print(validate(good))     # expect: []
+    print(validate(bad))      # expect: one problem listed
+    print(validate(broken))   # expect: ['missing field: subtotal', 'missing field: total']
 
     # real invoice
     from extract import extract, extract_items
